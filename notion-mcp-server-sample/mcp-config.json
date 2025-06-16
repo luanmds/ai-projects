@@ -1,0 +1,30 @@
+{
+  "name": "notion-mcp-server",
+  "description": "Notion MCP Server for accessing Notion workspaces",
+  "command": {
+    "command": "bash",
+    "args": ["run.sh"],
+    "cwd": "/path/to/notion-mcp-server-sample"
+  },
+  "tools": [
+    {
+      "name": "get_notion_pages",
+      "description": "Retrieve pages from Notion workspace with optional search query"
+    },
+    {
+      "name": "get_page_content", 
+      "description": "Get full content from a specific Notion page including all blocks"
+    },
+    {
+      "name": "search_notion",
+      "description": "Search for pages and databases across the Notion workspace"
+    },
+    {
+      "name": "get_database_pages",
+      "description": "Query pages from a specific Notion database with filters and sorting"
+    }
+  ],
+  "env": {
+    "NOTION_API_KEY": "your_notion_api_key_here"
+  }
+}
