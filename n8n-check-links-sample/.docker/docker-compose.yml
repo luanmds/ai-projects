@@ -1,0 +1,25 @@
+# Docker Compose file for n8n
+
+version: '3.8'
+
+services:
+  n8n:
+    image: docker.io/n8nio/n8n:latest
+    container_name: n8n
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - WEBHOOK_URL=https://localhost
+      - NODE_ENV=production
+      - GENERIC_TIMEZONE=Brasil/East
+    volumes:
+      - ../data:/data
+      - n8n_data:/home/node/.n8n
+    restart: unless-stopped
+
+volumes:
+  n8n_data:
+    driver: local

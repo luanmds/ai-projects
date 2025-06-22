@@ -1,0 +1,256 @@
+{
+  "name": "Status Sites",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 1
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -200,
+        0
+      ],
+      "id": "f16c6cb2-bb01-41bb-9c2e-6f5dcfdb50c0",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -220,
+        160
+      ],
+      "id": "e3a7d8f8-cac4-4834-b18d-290df22dbc20",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $json.links_file }}",
+        "options": {
+          "dataPropertyName": "links"
+        }
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        200,
+        80
+      ],
+      "id": "bfe37c8f-7d1b-4e32-b9e2-7d5584a8cd07",
+      "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "28478077-c9ef-46f3-a5c9-45a26295951f",
+              "name": "links_file",
+              "value": "/data/links-to-watch.txt",
+              "type": "string"
+            },
+            {
+              "id": "488c0074-d360-47bd-918e-92b3c5da00be",
+              "name": "telegram_chat_id",
+              "value": "{add this chat id}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -20,
+        80
+      ],
+      "id": "6bec31b3-906b-4993-96bc-0bd5c273533d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = Buffer.from(items[0].binary.links.data, 'base64').toString('utf8');\nconst lines = data.split(/\\r?\\n/).filter(line => line.trim() !== '');\nreturn lines.map(url => ({json: { url }}));\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        420,
+        80
+      ],
+      "id": "0bd0c02f-5578-41b5-b9e5-b33ebc20f338",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        620,
+        80
+      ],
+      "id": "f008bc93-a258-4308-aeba-15c487140e1d",
+      "name": "HTTP Request",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7729bcd1-5a0e-48ad-8eb4-fa929641b592",
+              "leftValue": "={{ $json.error.status }}",
+              "rightValue": 200,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        840,
+        180
+      ],
+      "id": "a2ae14e5-c3aa-45af-84e2-8723672946ee",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Edit Fields').item.json.telegram_chat_id }}",
+        "text": "=This site {{ $json.url }} returned status code {{ $json.error.status }}. ",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1060,
+        100
+      ],
+      "id": "15310f38-8c3d-4371-b873-ff31425df43b",
+      "name": "Telegram",
+      "webhookId": "206b065d-a63f-4592-87c8-a13230653dd0",
+      "credentials": {
+        "telegramApi": {
+          "id": "WLodsi4Ixz0jI5gJ",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [],
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0acc67c4-792c-427d-a0b2-c4c1b279e296",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bb04cc59dcbaf7949e4e1a120a7df2044690c54afc37d491e5a1cfc69e3ba044"
+  },
+  "id": "0mqUnuZekRSjfyDT",
+  "tags": []
+}
